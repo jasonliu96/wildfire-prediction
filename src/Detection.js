@@ -223,6 +223,7 @@ class Detection extends React.Component{
 
                     <div style={{position:'fixed', backgroundColor:'#f8f9fa', height:"72px", width:"100%",  borderLeft:'1px solid #d9dadb', borderBottom:"1px solid #d9dadb", paddingLeft:"20px"}}>
                         <h1 className='mt-2'>Fire Detection</h1>
+                        <h1 className='mt-2'>Github Pull from fork Test</h1>
                     </div>
 
                     <div style={{wdith:'60vw', position:'absolute', marginTop:'72px', zIndex:'-100'}}>
