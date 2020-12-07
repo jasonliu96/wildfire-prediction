@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import counties from './counties.json';
 import L from 'leaflet';
 import MyNavbar from './Components/MyNavbar';
+import CaFireData from './DetectionComponents/fire_history_ca.json'
 
 class Detection extends React.Component{
 
@@ -15,7 +16,8 @@ class Detection extends React.Component{
             currentFire: null,
             latitude: 37.334665328,
             longitude: -121.875329832,
-        }
+            selectedYear: '2015',
+        };
 
         this.onCountyClick = this.onCountyClick.bind(this);
         this.onEachCounty = this.onEachCounty.bind(this);
@@ -24,7 +26,8 @@ class Detection extends React.Component{
         this.makeFireMarkers = this.makeFireMarkers.bind(this);
         this.handleFireSelect = this.handleFireSelect.bind(this);
         this.handleCitySearch = this.handleCitySearch.bind(this);
-
+       
+        this.handleYearChange = this.handleYearChange.bind(this);
 
         this.redDotIcon = L.icon({
             iconUrl: require('./images/redDot.svg'),
@@ -77,22 +80,27 @@ class Detection extends React.Component{
         })
     }
 
-    makeFireMarkers(fires){
+    makeFireMarkers(year){
         var fireMarkers = []
-
-        Object.keys(fires).map((key) => {
-            fireMarkers.push(
-                <Marker position={[fires[key]['latitude'], fires[key]['longitude']]} onclick={this.handleFireSelect} key={key} acres={20}
-                icon = {this.redDotIcon}>
+        Object.keys(CaFireData).map((key) => {
+            if(CaFireData[key]['POO_LATITUDE']!=null&&CaFireData[key]['POO_LONGITUDE']!=null){
+                if(year==CaFireData[key]['DISCOVER_YEAR']){
+                fireMarkers.push( 
+                <Marker position={[CaFireData[key]['POO_LATITUDE'], CaFireData[key]['POO_LONGITUDE']]}
+                onclick={this.handleFireSelect} key={key} acres={20} icon = {this.blueDotIcon}>
                     <Popup>
-                        <h5>{fires[key]['name']}</h5>
-                        <p style={{display:''}}>Acres burned: {fires[key]['acres burned']}</p>
-                        <p style={{display:''}}> Start time: {fires[key]['start time']}</p>
+                    <h5>{CaFireData[key]['FIRE_NAME']}</h5>
+                    <p style={{display:''}}>Acres Burned: {CaFireData[key]['TOTAL_ACRES_BURNED']}</p>
+                    <p style={{display:''}}>Year: {CaFireData[key]['DISCOVER_YEAR']}</p>
                     </Popup>
                 </Marker>
-            );
-        })
+            );}
+        }})
         return fireMarkers;
+    }
+
+    handleYearChange(event){
+        this.setState({currentFire:null, selectedYear: event.target.value});
     }
 
     handleFireSelect(event){
@@ -103,7 +111,7 @@ class Detection extends React.Component{
             'latitude': event.latlng.lat,
             'longitude': event.latlng.lng,
             'acres burned': event.target._popup.options.children[1].props.children,
-            'start time': event.target._popup.options.children[2].props.children
+            'date': event.target._popup.options.children[2].props.children,  
         }
         this.setState({
             currentFire: fire,
@@ -125,7 +133,7 @@ class Detection extends React.Component{
         .then(res => res.json())
         .then(response => {
             console.log(data);
-            if(response['data'].length == 0){
+            if(response['data'].length === 0){
                 alert('Please enter a valid location');
             }
             else{
@@ -141,6 +149,7 @@ class Detection extends React.Component{
 
     render(){        
         // var position = [37.334665328, -121.875329832];
+        var fmarkers = this.makeFireMarkers(this.state.selectedYear);
         var countyStyle = {
             color: '#4a83ec',
             weight: 1,
@@ -179,33 +188,6 @@ class Detection extends React.Component{
             }
         }
 
-        var fires = {
-            1: {
-                'name': 'fire 1',
-                'latitude': 37,
-                'longitude': -121,
-                'acres burned': 1220,
-                'start time': '9/1/20 9:55am',
-                'contained': '90%'
-            },
-            2: {
-                'name': 'fire 2',
-                'latitude': 37.4,
-                'longitude': -122,
-                'acres burned': 330,
-                'start time': '9/2/20 10:30pm',
-                'contained': '44%'
-            },
-            3: {
-                'name': 'fire 3',
-                'latitude': 36.5,
-                'longitude': -121.4,
-                'acres burned': 11293,
-                'start time': '9/3/20 8:15am',
-                'contained': '30%'
-            }
-        }
-
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: require('./images/fire.png'),
@@ -213,7 +195,6 @@ class Detection extends React.Component{
             shadowUrl: require('leaflet/dist/images/marker-shadow.png')
         });
 
-        var fireMarkers = this.makeFireMarkers(fires);
 
         return(
             <div>
@@ -223,7 +204,6 @@ class Detection extends React.Component{
 
                     <div style={{position:'fixed', backgroundColor:'#f8f9fa', height:"72px", width:"100%",  borderLeft:'1px solid #d9dadb', borderBottom:"1px solid #d9dadb", paddingLeft:"20px"}}>
                         <h1 className='mt-2'>Fire Detection</h1>
-                        <h1 className='mt-2'>Github Pull from fork Test</h1>
                     </div>
 
                     <div style={{wdith:'60vw', position:'absolute', marginTop:'72px', zIndex:'-100'}}>
@@ -275,7 +255,7 @@ class Detection extends React.Component{
 
                                     <LayersControl.Overlay name="Show Markers" checked>
                                         <FeatureGroup>
-                                            {fireMarkers}
+                                            {fmarkers}
                                         </FeatureGroup>
                                     </LayersControl.Overlay>
 
@@ -301,6 +281,24 @@ class Detection extends React.Component{
                                         </div>
                                     </form>
                                 </div>
+                                <div style={{marginTop:'16px'}}>
+                                        <div className="col-lg-10 mb-3">
+                                            <div className="input-group" style={{width:'226px'}}>
+                                                <label style={{width:'100%'}}>Select a Year
+                                                <select className="form-control rounded-0" value={this.state.selectedYear} onChange={this.handleYearChange}>
+                                                <option value="2015">2015</option>
+                                                <option value="2016">2016</option>
+                                                <option value="2017">2017</option>
+                                                <option value="2018">2018</option>
+                                                <option value="2019">2019</option>
+                                                </select>
+                                                </label>
+                                                <div className="input-group-prepend">  
+                                                </div>
+                                            </div>
+                                        </div>
+                                 
+                                </div>
                                 <hr style={{margin:'16px'}}/>
 
                                 <div style={{border:'1px solid #d9dadb', margin:'16px', padding:'10px', backgroundColor:'#E9ECEF'}}>
@@ -316,13 +314,14 @@ class Detection extends React.Component{
                                     &nbsp;&nbsp; 6 - 12 hours ago
                                     <br/>
                                     <span style={dotStyles.blueDot}></span>
-                                    &nbsp;&nbsp; 12 - 24 hours ago
+                                    &nbsp;&nbsp; Past Fires
                                     <br/>
                                 </div>
 
                                 <div style={{margin:'0 16px'}}>
                                     <h4 style={{margin:'0'}}>Information</h4>
                                     <hr style={{margin:'0'}}/>
+                                    <p>Fire Data From California Fire History</p>
                                 </div>
 
                                 <div style={{height:'100%', overflow:'auto', margin:'8px 16px'}}>
@@ -337,9 +336,9 @@ class Detection extends React.Component{
                                             <br/>
                                             <strong>Longitude: </strong>{this.state.currentFire.longitude}
                                             <br/>
-                                            <strong>Start Time: </strong>{this.state.currentFire['start time']}
+                                            <strong>Year Of Occurance: </strong>{this.state.currentFire['date']}
                                             <br/>
-                                            <strong>Acres Burned: </strong>{this.state.currentFire['acres burned']}
+                                            <strong>{this.state.currentFire['acres burned']}</strong>
                                             <br/>
                                         </div>
                                     }
