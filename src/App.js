@@ -7,6 +7,7 @@ import DataCollection from './DataCollection';
 import Preprocessing from './Preprocessing';
 import DataAnalysis from './DataAnalysis';
 import Detection from './Detection';
+import Detection2 from './ImageDetection';
 import Risk from './Risk';
 import Progression from './Progression';
 import ModelEvaluation from './ModelEvaluation';
@@ -19,6 +20,7 @@ function App() {
       <Route path="/preprocessing" component={Preprocessing}></Route>
       <Route path="/data-analysis" component={DataAnalysis}></Route>
       <Route path="/detection" component={Detection}></Route>
+      <Route path="/detection2" component={Detection2}></Route>
       <Route path="/risk" component={Risk}></Route>
       <Route path="/progression" component={Progression}></Route>
       <Route path="/model-evaluation" component={ModelEvaluation}></Route>
